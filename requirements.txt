@@ -1,9 +1,8 @@
 flask
+fastapi
+pydantic
 groq
 duckduckgo-search
 tinydb
 gunicorn
-fastapi
-pydantic
-uvicorn
 python-dotenv
