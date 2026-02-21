@@ -1,3 +1,4 @@
+import os 
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
 from duckduckgo_search import DDGS
