@@ -1,41 +1,42 @@
-import os 
+import os
+from fastapi import FastAPI
+from pydantic import BaseModel
 from groq import Groq
 from duckduckgo_search import DDGS
 
-client = Groq(api_key=os.environ.get("GROOQ_API_KEY"))
+app = FastAPI()
+
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 memory = []
+
+class Query(BaseModel):
+    message: str
 
 def search_web(query):
     with DDGS() as ddgs:
         results = ddgs.text(query, max_results=3)
         return "\n".join([r['body'] for r in results])
 
-print("🤖 Your Personal AI Agent is ready!")
-print("Type 'quit' to exit\n")
+@app.post("/chat")
+def chat(query: Query):
+    user_input = query.message
 
-while True:
-    user_input = input("You: ")
-    
-    if user_input.lower() == "quit":
-        break
-    
-    if "search" in user_input.lower() or "what is" in user_input.lower() or "latest" in user_input.lower():
-        print("🔍 Searching the web...")
+    if any(word in user_input.lower() for word in ["search", "what is", "latest"]):
         search_results = search_web(user_input)
         user_input = f"{user_input}\n\nWeb search results:\n{search_results}"
-    
+
     memory.append({"role": "user", "content": user_input})
-    
+
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
-            {"role": "system", "content": "You are a personal AI assistant. Use web search results when provided to give accurate answers."},
+            {"role": "system", "content": "You are a personal AI assistant. Use web search results when provided."},
             *memory
         ]
     )
-    
+
     reply = response.choices[0].message.content
     memory.append({"role": "assistant", "content": reply})
-    
-    print(f"\nAgent: {reply}\n")
+
+    return {"reply": reply}

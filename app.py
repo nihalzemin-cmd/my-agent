@@ -6,7 +6,28 @@ from tinydb import TinyDB, Query
 from datetime import datetime
 
 app = Flask(__name__)
-client = Groq(api_key=os.environ.get("GROOQ_API_KEY"))
+api_key = os.environ.get("GROQ_API_KEY")
+
+if api_key:
+    client = Groq(api_key=api_key)
+else:
+    class MockClient:
+        class Chat:
+            class Completions:
+                def create(self, **kwargs):
+                    class Message:
+                        content = "Hello! I am running in **Mock Mode** because no `GROQ_API_KEY` was found. I can still chat with you, but I won't be using the real LLM or searching the web for real-time data. To use the real agent, please set your API key!"
+                    class Choice:
+                        message = Message()
+                    class Response:
+                        choices = [Choice()]
+                    return Response()
+            completions = Completions()
+        chat = Chat()
+    
+    client = MockClient()
+    print("WARNING: GROQ_API_KEY not found. Running in MOCK MODE.")
+
 
 db = TinyDB('memory.json')
 messages_table = db.table('messages')
