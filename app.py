@@ -6,7 +6,7 @@ from tinydb import TinyDB, Query
 from datetime import datetime
 
 app = Flask(__name__)
-api_key = os.environ.get("GROQ_API_KEY")
+api_key = "")
 
 if api_key:
     client = Groq(api_key=api_key)
