@@ -5,7 +5,7 @@ from tinydb import TinyDB, Query
 from datetime import datetime
 
 app = Flask(__name__)
-client = Groq(api_key="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")
+client = Groq(api_key=os.environ.get("GROOQ_API_KEY"))
 
 db = TinyDB('memory.json')
 messages_table = db.table('messages')

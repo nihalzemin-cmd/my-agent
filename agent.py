@@ -1,7 +1,8 @@
+import os 
 from groq import Groq
 from duckduckgo_search import DDGS
 
-client = Groq(api_key="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")
+client = Groq(api_key=os.environ.get("GROOQ_API_KEY"))
 
 memory = []
 
