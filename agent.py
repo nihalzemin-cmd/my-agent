@@ -1,12 +1,16 @@
 import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from groq import Groq
 from duckduckgo_search import DDGS
 
+load_dotenv()
+
 app = FastAPI()
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+api_key = os.getenv("API_KEY")
+client = Groq(api_key=api_key)
 
 memory = []
 

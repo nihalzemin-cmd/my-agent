@@ -1,12 +1,15 @@
-import os 
+import os
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify
 from groq import Groq
 from duckduckgo_search import DDGS
 from tinydb import TinyDB, Query
 from datetime import datetime
 
+load_dotenv()
+
 app = Flask(__name__)
-api_key = "")
+api_key = os.getenv("API_KEY")
 
 if api_key:
     client = Groq(api_key=api_key)
