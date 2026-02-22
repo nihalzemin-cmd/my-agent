@@ -5,8 +5,8 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
-      - key: API_KEY
-        sync: false # User needs to set this manually in the dashboard or via a secret
+      - key: GROQ_API_KEY
+        sync: false # Set your Groq API Key in the Render dashboard
       - key: PORT
         value: 5000
     plan: free

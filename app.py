@@ -9,7 +9,7 @@ from datetime import datetime
 load_dotenv()
 
 app = Flask(__name__)
-api_key = os.getenv("API_KEY")
+api_key = os.getenv("GROQ_API_KEY")
 
 if api_key:
     client = Groq(api_key=api_key)
@@ -19,7 +19,7 @@ else:
             class Completions:
                 def create(self, **kwargs):
                     class Message:
-                        content = "Hello! I am running in **Mock Mode** because no `GROQ_API_KEY` was found. I can still chat with you, but I won't be using the real LLM or searching the web for real-time data. To use the real agent, please set your API key!"
+                        content = "I'm currently in deployment mode. Please ensure the `GROQ_API_KEY` is correctly configured in your environment settings to enable my full assistant capabilities."
                     class Choice:
                         message = Message()
                     class Response:
@@ -29,7 +29,7 @@ else:
         chat = Chat()
     
     client = MockClient()
-    print("WARNING: GROQ_API_KEY not found. Running in MOCK MODE.")
+    print("WARNING: GROQ_API_KEY not found. Operating in fallback mode.")
 
 
 db = TinyDB('memory.json')
