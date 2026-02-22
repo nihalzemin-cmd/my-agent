@@ -11,10 +11,25 @@ load_dotenv()
 app = Flask(__name__)
 api_key = os.getenv("GROQ_API_KEY")
 
-if not api_key:
-    raise RuntimeError("GROQ_API_KEY not found. Please set your API key in the .env file.")
-
-client = Groq(api_key=api_key)
+if api_key:
+    client = Groq(api_key=api_key)
+else:
+    class MockClient:
+        class Chat:
+            class Completions:
+                def create(self, **kwargs):
+                    class Message:
+                        content = "I'm currently in fallback mode. Please ensure `GROQ_API_KEY` is set in your `.env` to use the real assistant."
+                    class Choice:
+                        message = Message()
+                    class Response:
+                        choices = [Choice()]
+                    return Response()
+            completions = Completions()
+        chat = Chat()
+    
+    client = MockClient()
+    print("WARNING: GROQ_API_KEY not found. Operating in fallback mode.")
 
 
 db = TinyDB('memory.json')
@@ -33,8 +48,6 @@ def get_memory():
 def home():
     return render_template("index.html")
 
-
-
 @app.route("/chat", methods=["POST"])
 def chat():
     user_input = request.json.get("message")
@@ -49,27 +62,19 @@ def chat():
 
     memory = get_memory()
 
-    def generate():
-        response = client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=[
-                {"role": "system", "content": "You are a personal AI assistant and understanding partner. You remember everything about him from past conversations. Be helpful, friendly and personal."},
-                *memory[:-1],
-                {"role": "user", "content": user_input_with_search}
-            ],
-            stream=True
-        )
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": "You are a personal AI assistant and understanding partner. You remember everything about him from past conversations. Be helpful, friendly and personal."},
+            *memory[:-1],
+            {"role": "user", "content": user_input_with_search}
+        ]
+    )
 
-        full_reply = ""
-        for chunk in response:
-            if chunk.choices[0].delta.content:
-                content = chunk.choices[0].delta.content
-                full_reply += content
-                yield content
+    reply = response.choices[0].message.content
+    messages_table.insert({"role": "assistant", "content": reply, "time": str(datetime.now())})
 
-        messages_table.insert({"role": "assistant", "content": full_reply, "time": str(datetime.now())})
-
-    return Response(stream_with_context(generate()), mimetype='text/plain')
+    return jsonify({"reply": reply})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
