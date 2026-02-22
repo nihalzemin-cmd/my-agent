@@ -48,6 +48,8 @@ def get_memory():
 def home():
     return render_template("index.html")
 
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context
+
 @app.route("/chat", methods=["POST"])
 def chat():
     user_input = request.json.get("message")
@@ -62,19 +64,30 @@ def chat():
 
     memory = get_memory()
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": "You are a personal AI assistant and understanding partner for Nihal. You remember everything about him from past conversations. Be helpful, friendly and personal."},
-            *memory[:-1],
-            {"role": "user", "content": user_input_with_search}
-        ]
-    )
+    def generate():
+        response = client.chat.completions.create(
+            model="llama3-8b-8192",
+            messages=[
+                {"role": "system", "content": "You are a personal AI assistant and understanding partner. You remember everything about him from past conversations. Be helpful, friendly and personal."},
+                *memory[:-1],
+                {"role": "user", "content": user_input_with_search}
+            ],
+            stream=True
+        )
 
-    reply = response.choices[0].message.content
-    messages_table.insert({"role": "assistant", "content": reply, "time": str(datetime.now())})
+        full_reply = ""
+        for chunk in response:
+            if chunk.choices[0].delta.content:
+                content = chunk.choices[0].delta.content
+                full_reply += content
+                yield content
 
-    return jsonify({"reply": reply})
+        messages_table.insert({"role": "assistant", "content": full_reply, "time": str(datetime.now())})
+
+    return Response(stream_with_context(generate()), mimetype='text/plain')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0",
+    port=port)

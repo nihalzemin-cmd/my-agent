@@ -94,11 +94,25 @@
                 body: JSON.stringify({message: message})
             });
 
-            const data = await response.json();
             document.getElementById("typing").remove();
-            chatBox.innerHTML += `<div class="message agent-message">${data.reply}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-            speak(data.reply);
+            const messageDiv = document.createElement("div");
+            messageDiv.className = "message agent-message";
+            chatBox.appendChild(messageDiv);
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullReply = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value, { stream: true });
+                fullReply += chunk;
+                messageDiv.innerText = fullReply;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            speak(fullReply);
         }
 
         function handleKey(event) {
