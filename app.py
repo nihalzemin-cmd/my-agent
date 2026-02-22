@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from groq import Groq
 from duckduckgo_search import DDGS
 from tinydb import TinyDB, Query
@@ -48,7 +48,7 @@ def get_memory():
 def home():
     return render_template("index.html")
 
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
+
 
 @app.route("/chat", methods=["POST"])
 def chat():
