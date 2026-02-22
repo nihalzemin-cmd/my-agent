@@ -11,25 +11,10 @@ load_dotenv()
 app = Flask(__name__)
 api_key = os.getenv("GROQ_API_KEY")
 
-if api_key:
-    client = Groq(api_key=api_key)
-else:
-    class MockClient:
-        class Chat:
-            class Completions:
-                def create(self, **kwargs):
-                    class Message:
-                        content = "I'm currently in deployment mode. Please ensure the `GROQ_API_KEY` is correctly configured in your environment settings to enable my full assistant capabilities."
-                    class Choice:
-                        message = Message()
-                    class Response:
-                        choices = [Choice()]
-                    return Response()
-            completions = Completions()
-        chat = Chat()
-    
-    client = MockClient()
-    print("WARNING: GROQ_API_KEY not found. Operating in fallback mode.")
+if not api_key:
+    raise RuntimeError("GROQ_API_KEY not found. Please set your API key in the .env file.")
+
+client = Groq(api_key=api_key)
 
 
 db = TinyDB('memory.json')
